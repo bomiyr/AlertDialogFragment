@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AlertDialogFragment Example</string>
+    <string name="example_title">Example title</string>
+    <string name="click_me_button">Click me</string>
+</resources>
