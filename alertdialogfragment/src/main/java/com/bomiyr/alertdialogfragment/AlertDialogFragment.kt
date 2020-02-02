@@ -1,9 +1,7 @@
 package com.bomiyr.alertdialogfragment
 
-import android.app.Activity
 import android.app.Dialog
 import android.content.DialogInterface
-import android.content.Intent
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
@@ -14,24 +12,23 @@ import androidx.fragment.app.Fragment
 
 class AlertDialogFragment : DialogFragment() {
 
+    interface AlertDialogFragmentListener {
+        fun onAlertDialogFragmentResult(requestCode: Int, result: AlertDialogResult)
+    }
+
     companion object {
         private const val ARG_BUILDER = "ARG_BUILDER"
-
-        const val ACTION_POSITIVE_BUTTON_CLICKED =
-            "AlertDialogFragment_ACTION_POSITIVE_BUTTON_CLICKED"
-        const val ACTION_NEGATIVE_BUTTON_CLICKED =
-            "AlertDialogFragment_ACTION_NEGATIVE_BUTTON_CLICKED"
-        const val ACTION_NEUTRAL_BUTTON_CLICKED =
-            "AlertDialogFragment_ACTION_NEUTRAL_BUTTON_CLICKED"
-        const val ACTION_DISMISSED = "AlertDialogFragment_ACTION_DISMISSED"
+        private const val ARG_REQ_CODE = "ARG_REQ_CODE"
     }
 
     private lateinit var builder: Builder
+    private var requestCode: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         builder = arguments?.getParcelable(ARG_BUILDER)!!
+        requestCode = arguments?.getInt(ARG_REQ_CODE) ?: 0
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -54,57 +51,33 @@ class AlertDialogFragment : DialogFragment() {
 
         builder.positiveButtonResId?.let {
             dialogBuilder.setPositiveButton(it) { _, _ ->
-                targetFragment?.onActivityResult(
-                    targetRequestCode,
-                    Activity.RESULT_OK,
-                    Intent(ACTION_POSITIVE_BUTTON_CLICKED)
-                )
+                postResult(AlertDialogResult.POSITIVE_BUTTON_CLICKED)
             }
         }
         builder.positiveButton?.let {
             dialogBuilder.setPositiveButton(it) { _, _ ->
-                targetFragment?.onActivityResult(
-                    targetRequestCode,
-                    Activity.RESULT_OK,
-                    Intent(ACTION_POSITIVE_BUTTON_CLICKED)
-                )
+                postResult(AlertDialogResult.POSITIVE_BUTTON_CLICKED)
             }
         }
 
         builder.negativeButtonResId?.let {
             dialogBuilder.setNegativeButton(it) { _, _ ->
-                targetFragment?.onActivityResult(
-                    targetRequestCode,
-                    Activity.RESULT_OK,
-                    Intent(ACTION_NEGATIVE_BUTTON_CLICKED)
-                )
+                postResult(AlertDialogResult.NEGATIVE_BUTTON_CLICKED)
             }
         }
         builder.negativeButton?.let {
             dialogBuilder.setNegativeButton(it) { _, _ ->
-                targetFragment?.onActivityResult(
-                    targetRequestCode,
-                    Activity.RESULT_OK,
-                    Intent(ACTION_NEGATIVE_BUTTON_CLICKED)
-                )
+                postResult(AlertDialogResult.NEGATIVE_BUTTON_CLICKED)
             }
         }
         builder.neutralButtonResId?.let {
             dialogBuilder.setNeutralButton(it) { _, _ ->
-                targetFragment?.onActivityResult(
-                    targetRequestCode,
-                    Activity.RESULT_OK,
-                    Intent(ACTION_NEUTRAL_BUTTON_CLICKED)
-                )
+                postResult(AlertDialogResult.NEUTRAL_BUTTON_CLICKED)
             }
         }
         builder.neutralButton?.let {
             dialogBuilder.setNeutralButton(it) { _, _ ->
-                targetFragment?.onActivityResult(
-                    targetRequestCode,
-                    Activity.RESULT_OK,
-                    Intent(ACTION_NEUTRAL_BUTTON_CLICKED)
-                )
+                postResult(AlertDialogResult.NEUTRAL_BUTTON_CLICKED)
             }
         }
 
@@ -117,16 +90,24 @@ class AlertDialogFragment : DialogFragment() {
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
-        targetFragment?.onActivityResult(targetRequestCode, Activity.RESULT_CANCELED, null)
+        postResult(AlertDialogResult.CANCELED)
     }
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
-        targetFragment?.onActivityResult(
-            targetRequestCode,
-            Activity.RESULT_OK,
-            Intent(ACTION_DISMISSED)
-        )
+
+        postResult(AlertDialogResult.DISMISSED)
+    }
+
+    private fun postResult(result: AlertDialogResult) {
+        (targetFragment as? AlertDialogFragmentListener)
+            ?.onAlertDialogFragmentResult(requestCode, result)
+
+        (parentFragment as? AlertDialogFragmentListener)
+            ?.onAlertDialogFragmentResult(requestCode, result)
+
+        (activity as? AlertDialogFragmentListener)
+            ?.onAlertDialogFragmentResult(requestCode, result)
     }
 
     class Builder() : Parcelable {
@@ -217,13 +198,26 @@ class AlertDialogFragment : DialogFragment() {
             return this
         }
 
-        fun create(targetFragment: Fragment, requestCode: Int): AlertDialogFragment {
+        /**
+         * Create AlertDialogFragment.
+         * In case of using from another Fragment it is required to use childFragmentManager to show dialog!
+         */
+        fun create(requestCode: Int): AlertDialogFragment {
             return AlertDialogFragment().apply {
                 arguments = Bundle().apply {
                     putParcelable(ARG_BUILDER, this@Builder)
+                    putInt(ARG_REQ_CODE, requestCode)
                 }
-                setTargetFragment(targetFragment, requestCode)
             }
+        }
+
+        /**
+         * Create AlertDialogFragment.
+         * In case of using from another Fragment it is required to use fragmentManager
+         * (NOT childFragmentManager) to show dialog!
+         */
+        fun create(requestCode: Int, targetFragment: Fragment) {
+            return create(requestCode).setTargetFragment(targetFragment, requestCode)
         }
 
         override fun writeToParcel(parcel: Parcel, flags: Int) {
