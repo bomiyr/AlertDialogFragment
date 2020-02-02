@@ -11,7 +11,7 @@ Available Builder functions
 
 Your calling Activity or Fragment should implement AlertDialogFragmentListener interface to get result.
 
-Be careful choosing FramgentManager in case of using from Fragment:
+Be careful choosing FragmentManager in case of using from Fragment:
 - If you create AlertDialogFragment with Builder.create(requestCode: Int) use Fragment.childFragmentManager
 - If you create AlertDialogFragment with Builder.create(requestCode: Int, targetFragment: Fragment) use Fragment.fragmentManager
 
@@ -58,6 +58,6 @@ Add it in your root build.gradle at the end of repositories:
 Add the dependency
 
 	dependencies {
-	        implementation 'com.github.bomiyr:AlertDialogFragment:v1.0'
+	        implementation 'com.github.bomiyr:AlertDialogFragment:1.1'
 	}
 
