@@ -216,8 +216,10 @@ class AlertDialogFragment : DialogFragment() {
          * In case of using from another Fragment it is required to use fragmentManager
          * (NOT childFragmentManager) to show dialog!
          */
-        fun create(requestCode: Int, targetFragment: Fragment) {
-            return create(requestCode).setTargetFragment(targetFragment, requestCode)
+        fun create(requestCode: Int, targetFragment: Fragment): AlertDialogFragment {
+            return create(requestCode).apply {
+                setTargetFragment(targetFragment, requestCode)
+            }
         }
 
         override fun writeToParcel(parcel: Parcel, flags: Int) {
